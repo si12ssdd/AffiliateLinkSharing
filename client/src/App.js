@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import AppLayout from "./layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Error from "./pages/Error";
 import Logout from "./pages/Logout";
@@ -27,7 +27,7 @@ function App() {
   const userDetails = useSelector((state) => state.userDetails);
   const [loading, setLoading] = useState(true);
 
-  const isUserLoggedIn = async () => {
+  const isUserLoggedIn = useCallback(async () => {
     try {
       const response = await axios.post(`${serverEndpoint}/auth/is-user-logged-in`, {}, {
         withCredentials: true
@@ -41,11 +41,11 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     isUserLoggedIn();
-  }, []);
+  }, [isUserLoggedIn]);
 
   if (loading) {
     return <Spinner />;
