@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Home.css'; // Make sure to create and link this CSS file
 
 function Home() {
@@ -42,28 +43,28 @@ function Home() {
           </div>
         </div>
       </section>
-      
+
       {/* How It Works Section */}
       <section className="how-it-works-section">
         <div className="container text-center">
-            <h2 className="mb-5">Get Started in 3 Simple Steps</h2>
-            <div className="row">
-                <div className="col-md-4">
-                    <div className="step-number">1</div>
-                    <h4>Create & Shorten</h4>
-                    <p>Paste your long affiliate link and get a short, trackable link in seconds.</p>
-                </div>
-                <div className="col-md-4">
-                    <div className="step-number">2</div>
-                    <h4>Share & Promote</h4>
-                    <p>Share your new link across your blog, social media, or ad campaigns.</p>
-                </div>
-                <div className="col-md-4">
-                    <div className="step-number">3</div>
-                    <h4>Track & Earn</h4>
-                    <p>Analyze your link performance and watch your earnings grow with every conversion.</p>
-                </div>
+          <h2 className="mb-5">Get Started in 3 Simple Steps</h2>
+          <div className="row">
+            <div className="col-md-4">
+              <div className="step-number">1</div>
+              <h4>Create & Shorten</h4>
+              <p>Paste your long affiliate link and get a short, trackable link in seconds.</p>
             </div>
+            <div className="col-md-4">
+              <div className="step-number">2</div>
+              <h4>Share & Promote</h4>
+              <p>Share your new link across your blog, social media, or ad campaigns.</p>
+            </div>
+            <div className="col-md-4">
+              <div className="step-number">3</div>
+              <h4>Track & Earn</h4>
+              <p>Analyze your link performance and watch your earnings grow with every conversion.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -72,12 +73,12 @@ function Home() {
         <div className="container">
           <h2>Ready to Monetize Your Content?</h2>
           <p className="lead mb-4">Join hundreds of content creators, marketers, and businesses who trust Affiliate++ to manage their links.</p>
-          <a href="#" className="btn btn-primary btn-lg">Start Your Free Trial Today</a>
+          <Link to="/register" className="btn btn-primary btn-lg">Start Your Free Trial Today</Link>
         </div>
       </section>
 
       {/* Footer */}
-     
+
     </>
   );
 }

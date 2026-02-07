@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { serverEndpoint } from "../../config/config";
 import { DataGrid } from '@mui/x-data-grid';
@@ -52,7 +52,7 @@ function AnalyticsDashboard() {
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
 
-    const fetchAnalytics = async () => {
+    const fetchAnalytics = useCallback(async () => {
         try {
             const response = await axios.get(`${serverEndpoint}/links/analytics`, {
                 params: {
@@ -67,7 +67,7 @@ function AnalyticsDashboard() {
             console.log(error);
             navigate('/error');
         }
-    };
+    }, [id, fromDate, toDate, navigate]);
 
     const groupBy = (key) => {
         return analyticsData.reduce((acc, item) => {
@@ -97,7 +97,7 @@ function AnalyticsDashboard() {
 
     useEffect(() => {
         fetchAnalytics();
-    }, [ fromDate, toDate,id]);
+    }, [fetchAnalytics]);
 
     return (
         <div className="container py-5">

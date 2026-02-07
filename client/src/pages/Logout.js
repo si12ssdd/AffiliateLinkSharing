@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { serverEndpoint } from "../config/config";
 import { useDispatch } from "react-redux";
@@ -9,14 +9,14 @@ function Logout() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         try {
             await axios.post(`${serverEndpoint}/auth/logout`, {}, {
                 withCredentials: true
             });
-             document.cookie = `jwtToken=;
+            document.cookie = `jwtToken=;
              expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-              document.cookie = `refreshToken=; 
+            document.cookie = `refreshToken=; 
               expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
             dispatch({
                 type: CLEAR_USER
@@ -25,11 +25,11 @@ function Logout() {
             console.log(error);
             navigate('/error');
         }
-    };
+    }, [dispatch, navigate]);
 
     useEffect(() => {
         handleLogout();
-    }, []);
+    }, [handleLogout]);
 }
 
 export default Logout;

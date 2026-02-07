@@ -1,9 +1,8 @@
 import IconButton from '@mui/material/IconButton';
 import { DataGrid } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { serverEndpoint } from '../../config/config';
 import { Modal } from 'react-bootstrap';
@@ -39,10 +38,7 @@ function LinksDashboard() {
         category: ""
     });
 
-    const handleShowDeleteModal = (linkId) => {
-        setFormData({ id: linkId });
-        setShowDeleteModal(true);
-    };
+
 
     const handleCloseDeleteModal = () => {
         setShowDeleteModal(false);
@@ -173,7 +169,7 @@ function LinksDashboard() {
         return response.data.secure_url;
     };
 
-    const fetchLinks = async () => {
+    const fetchLinks = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -199,11 +195,11 @@ function LinksDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, pageSize, searchQuery, sortModel]);
 
     useEffect(() => {
         fetchLinks();
-    }, [currentPage, pageSize, searchQuery, sortModel]);
+    }, [fetchLinks]);
 
     const columns = [
         {
