@@ -10,21 +10,23 @@ const cors = require('cors');
 
 let isConnected = false;
 const connectDB = async () => {
-  if (isConnected || mongoose.connection.readyState >= 1) {
+  if (mongoose.connection.readyState >= 1) {
     isConnected = true;
     return;
   }
   if (!process.env.MONGO_URI) {
-    throw new Error('Database configuration error: MONGO_URI is not defined');
+    throw new Error('Database configuration error: MONGO_URI is not defined in environment variables');
   }
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     isConnected = true;
-    console.log('MongoDB Connected');
+    console.log('MongoDB Connected successfully');
   } catch (error) {
     isConnected = false;
     console.error('MongoDB connection error:', error.message);
-    throw new Error('Database connection failed');
+    throw new Error(`Database connection failed: ${error.message}. Please verify MongoDB Atlas IP Access List (allow 0.0.0.0/0) and credentials.`);
   }
 };
 
