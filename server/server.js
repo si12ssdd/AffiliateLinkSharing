@@ -8,11 +8,40 @@ const userRoutes = require('./src/routes/userRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 const cors = require('cors');
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch((error) => console.log(error));
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected || mongoose.connection.readyState >= 1) {
+    isConnected = true;
+    return;
+  }
+  if (!process.env.MONGO_URI) {
+    throw new Error('Database configuration error: MONGO_URI is not defined');
+  }
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log('MongoDB Connected');
+  } catch (error) {
+    isConnected = false;
+    console.error('MongoDB connection error:', error.message);
+    throw new Error('Database connection failed');
+  }
+};
+
+// Initial connection attempt
+connectDB().catch(() => {});
 
 const app = express(); // Instantiate express app.
+
+// Ensure DB is connected for serverless invocations (e.g. Vercel)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use((req, res, next) => {
   // Skip JSON middleware for the webhook endpoint
@@ -25,29 +54,66 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 
-const allowedOrigins = [
+const clientUrls = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map(url => url.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+const defaultAllowedOrigins = [
   'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
   'https://magical-mousse-326f31.netlify.app',
-  process.env.CLIENT_URL
-];
+  ...clientUrls
+].map(url => url.replace(/\/+$/, ''));
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  const cleanOrigin = origin.replace(/\/+$/, '');
+
+  if (defaultAllowedOrigins.includes(cleanOrigin)) return true;
+  if (/^https?:\/\/localhost(:\d+)?$/.test(cleanOrigin)) return true;
+  if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(cleanOrigin)) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname.endsWith('.vercel.app') || hostname === 'vercel.app') return true;
+    if (hostname.endsWith('.netlify.app') || hostname === 'netlify.app') return true;
+  } catch (e) {
+    // If URL parsing fails, ignore
+  }
+
+  return false;
+};
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature', 'x-forwarded-for']
 };
+
 app.use(cors(corsOptions));
 app.use('/auth', authRoutes);
 app.use('/links', linksRoutes);
 app.use('/users', userRoutes);
-
 app.use('/payments', paymentRoutes);
+
+// Global Error Handler to return standard JSON
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  const status = err.status || 500;
+  res.status(status).json({
+    error: err.message || 'Internal server error'
+  });
+});
 
 const PORT = process.env.PORT || 5001;
 

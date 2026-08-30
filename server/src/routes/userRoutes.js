@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controller/userController');
-const authMiddleware = require('../middleware/authMiddleware');
-const authorize = require('../middleware/authorizeMiddleware');
+const userController = require('../controllers/userController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const authorize = require('../middlewares/authorizeMiddleware');
 
 router.use(authMiddleware.protect);
 

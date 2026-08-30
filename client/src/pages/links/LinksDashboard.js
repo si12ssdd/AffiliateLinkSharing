@@ -1,6 +1,7 @@
 import IconButton from '@mui/material/IconButton';
 import { DataGrid } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
@@ -38,7 +39,10 @@ function LinksDashboard() {
         category: ""
     });
 
-
+    const handleOpenDeleteModal = (id) => {
+        setFormData(prev => ({ ...prev, id }));
+        setShowDeleteModal(true);
+    };
 
     const handleCloseDeleteModal = () => {
         setShowDeleteModal(false);
@@ -226,22 +230,24 @@ function LinksDashboard() {
         { field: 'category', headerName: 'Category', flex: 2 },
         { field: 'clickCount', headerName: 'Clicks', flex: 1 },
         {
-            field: 'action', headerName: 'Actions', flex: 1, sortable: false, renderCell: (params) => (
-                <>
+            field: 'action', headerName: 'Actions', flex: 1.5, sortable: false, renderCell: (params) => (
+                <div className="d-flex align-items-center">
+                    {permission.canViewLink && (
+                        <IconButton aria-label="analytics" onClick={() => navigate(`/analytics/${params.row._id}`)}>
+                            <AssessmentIcon />
+                        </IconButton>
+                    )}
                     {permission.canEditLink && (
-                        <IconButton>
-                            <EditIcon onClick={() => handleOpenModal(true, params.row)} />
+                        <IconButton aria-label="edit" onClick={() => handleOpenModal(true, params.row)}>
+                            <EditIcon />
                         </IconButton>
                     )}
-
                     {permission.canDeleteLink && (
-                        <IconButton>
-                            <AssessmentIcon onClick={() => {
-                                navigate(`/analytics/${params.row._id}`);
-                            }} />
+                        <IconButton aria-label="delete" onClick={() => handleOpenDeleteModal(params.row._id)}>
+                            <DeleteIcon />
                         </IconButton>
                     )}
-                </>
+                </div>
             )
         },
         {

@@ -1,28 +1,37 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import AppLayout from "./layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import Error from "./pages/Error";
-import Logout from "./pages/Logout";
-import { serverEndpoint } from "./config/config";
 import { useDispatch, useSelector } from "react-redux";
-import { SET_USER } from "./redux/user/actions";
-import UserLayout from "./layout/UserLayout";
-import Register from "./pages/Register";
 import { Spinner } from "react-bootstrap";
-import ManageUsers from "./pages/users/ManageUsers";
-import UnauthorizedAccess from "./components/UnauthorizedAccess";
+
+// Configuration & State
+import { serverEndpoint } from "./config/config";
+import { SET_USER } from "./redux/user/actions";
 import ProtectedRoute from "./rbac/ProtectedRoute";
-import ManagePayments from "./pages/payments/ManagePayments";
+
+// Layouts
+import PublicLayout from "./layouts/PublicLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
+
+// Pages: Home & Auth
+import Home from "./pages/home/Home";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Logout from "./pages/auth/Logout";
+import ForgetPassword from "./pages/auth/ForgetPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+
+// Pages: Core Features
+import LinksDashboard from "./pages/links/LinksDashboard";
 import AnalyticsDashboard from "./pages/links/AnalyticsDashboard";
-import ForgetPassword from "./pages/ForgetPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ManagePayments from "./pages/payments/ManagePayments";
+import ManageUsers from "./pages/users/ManageUsers";
+
+// Pages: Common & Status
+import NotFound from "./pages/common/NotFound";
+import Unauthorized from "./pages/common/Unauthorized";
 
 function App() {
-  // const [userDetails, setUserDetails] = useState(null);
   const dispatch = useDispatch();
   const userDetails = useSelector((state) => state.userDetails);
   const [loading, setLoading] = useState(true);
@@ -48,77 +57,170 @@ function App() {
   }, [isUserLoggedIn]);
 
   if (loading) {
-    return <Spinner />;
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
   }
 
   return (
     <Routes>
-      <Route path="/" element={userDetails ?
-        <UserLayout>
-          <Navigate to='/dashboard' />
-        </UserLayout> :
-        <AppLayout>
-          <Home />
-        </AppLayout>
-      }
+      {/* Landing & Public Routes */}
+      <Route
+        path="/"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <Navigate to="/dashboard" />
+            </DashboardLayout>
+          ) : (
+            <PublicLayout>
+              <Home />
+            </PublicLayout>
+          )
+        }
       />
-      <Route path="/login" element={userDetails ?
-        <Navigate to="/dashboard" /> :
-        <AppLayout>
-          <Login />
-        </AppLayout>}
+
+      {/* Auth Routes */}
+      <Route
+        path="/login"
+        element={
+          userDetails ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <PublicLayout>
+              <Login />
+            </PublicLayout>
+          )
+        }
       />
-      <Route path="/register" element={userDetails ?
-        <Navigate to='/dashboard' /> :
-        <AppLayout>
-          <Register />
-        </AppLayout>
-      } />
-      <Route path="/dashboard" element={userDetails ?
-        <UserLayout><Dashboard /></UserLayout> :
-        <Navigate to="/login" />} />
+      <Route
+        path="/register"
+        element={
+          userDetails ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <PublicLayout>
+              <Register />
+            </PublicLayout>
+          )
+        }
+      />
+      <Route
+        path="/forget-password"
+        element={
+          <PublicLayout>
+            <ForgetPassword />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicLayout>
+            <ResetPassword />
+          </PublicLayout>
+        }
+      />
+      <Route
+        path="/logout"
+        element={userDetails ? <Logout /> : <Navigate to="/login" />}
+      />
 
-      <Route path="/logout" element={userDetails ?
-        <Logout /> :
-        <Navigate to="/login" />} />
+      {/* Authenticated Dashboard & Feature Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <LinksDashboard />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/analytics/:id"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <AnalyticsDashboard />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/manage-payments"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <ManagePayments />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          userDetails ? (
+            <ProtectedRoute roles={["admin"]}>
+              <DashboardLayout>
+                <ManageUsers />
+              </DashboardLayout>
+            </ProtectedRoute>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
 
-      <Route path="/error" element={userDetails ?
-        <UserLayout>
-          <Error />
-        </UserLayout> :
-        <AppLayout><Error /></AppLayout>} />
-      <Route path="/users" element={userDetails ?
-        <ProtectedRoute roles={['admin']}>
-          <UserLayout>
-            <ManageUsers />
-          </UserLayout>
-        </ProtectedRoute> :
-        <Navigate to='/login' />
-      } />
-      <Route path="/unauthorized-access" element={userDetails ?
-        <UserLayout><UnauthorizedAccess /></UserLayout> :
-        <Navigate to="/login" />} />
-      <Route path="/manage-payments" element={userDetails ?
-        <UserLayout><ManagePayments /></UserLayout> :
-        <Navigate to="/login" />} />
-      <Route path="/analytics/:id" element={userDetails ?
-        <UserLayout>
-          <AnalyticsDashboard />
-        </UserLayout> :
-        <Navigate to="/login" />
-      } />
-
-      <Route path="/forget-password" element={
-        <AppLayout>
-          <ForgetPassword />
-        </AppLayout>
-      } />
-      <Route path="/reset-password" element={
-        <AppLayout>
-          <ResetPassword />
-        </AppLayout>
-      } />
-
+      {/* Common / Status Routes */}
+      <Route
+        path="/unauthorized-access"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <Unauthorized />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/error"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <NotFound />
+            </DashboardLayout>
+          ) : (
+            <PublicLayout>
+              <NotFound />
+            </PublicLayout>
+          )
+        }
+      />
+      <Route
+        path="*"
+        element={
+          userDetails ? (
+            <DashboardLayout>
+              <NotFound />
+            </DashboardLayout>
+          ) : (
+            <PublicLayout>
+              <NotFound />
+            </PublicLayout>
+          )
+        }
+      />
     </Routes>
   );
 }

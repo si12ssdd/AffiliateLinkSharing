@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
-const linksController = require('../controller/linksController');
-const authorize = require('../middleware/authorizeMiddleware');
+const authMiddleware = require('../middlewares/authMiddleware');
+const linksController = require('../controllers/linksController');
+const authorize = require('../middlewares/authorizeMiddleware');
 
 router.get('/r/:id', linksController.redirect);
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const authController = require('../controller/authController');
+const authController = require('../controllers/authController');
 const router = express.Router(); // Instance of Router
 const { body } = require('express-validator');
 const rateLimit = require('express-rate-limit');

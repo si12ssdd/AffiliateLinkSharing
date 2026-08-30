@@ -150,7 +150,7 @@ function AnalyticsDashboard() {
                             labels: Object.keys(clicksByBrowser),
                             datasets: [
                                 {
-                                    data: Object.values(clicksByCity),
+                                    data: Object.values(clicksByBrowser),
                                     backgroundColor: [
                                         '#FF6384',
                                         '#36A2EB',

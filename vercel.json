@@ -15,19 +15,19 @@
     ],
     "routes": [
         {
-            "src": "/auth/(.*)",
+            "src": "/auth(.*)",
             "dest": "/server/server.js"
         },
         {
-            "src": "/links/(.*)",
+            "src": "/links(.*)",
             "dest": "/server/server.js"
         },
         {
-            "src": "/users/(.*)",
+            "src": "/users(.*)",
             "dest": "/server/server.js"
         },
         {
-            "src": "/payments/(.*)",
+            "src": "/payments(.*)",
             "dest": "/server/server.js"
         },
         {

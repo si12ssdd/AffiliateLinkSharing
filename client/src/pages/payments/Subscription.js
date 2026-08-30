@@ -53,31 +53,31 @@ function Subscription() {
                         <div className="card-body">
                             <h3 className="card-title">Subscription Summary</h3>
                             <hr />
-                            <p className="card-text">
+                            <div className="card-text">
                                 <div className="pb-2">
-                                    <strong>Start Date: </strong> {formatDate(subscription.start)}
+                                    <strong>Start Date: </strong> {formatDate(subscription?.start)}
                                 </div>
 
                                 <div className="pb-2">
-                                    <strong>End Date: </strong> {formatDate(subscription.end)}
+                                    <strong>End Date: </strong> {formatDate(subscription?.end)}
                                 </div>
 
                                 <div className="pb-2">
-                                    <strong>Last Payment Date: </strong> {formatDate(subscription.lastBillDate)}
+                                    <strong>Last Payment Date: </strong> {formatDate(subscription?.lastBillDate)}
                                 </div>
 
                                 <div className="pb-2">
-                                    <strong>Next Payment Date: </strong> {formatDate(subscription.nextBillDate)}
+                                    <strong>Next Payment Date: </strong> {formatDate(subscription?.nextBillDate)}
                                 </div>
 
                                 <div className="pb-2">
-                                    <strong>Total Payments Made: </strong> {subscription.paymentsMade}
+                                    <strong>Total Payments Made: </strong> {subscription?.paymentsMade ?? 0}
                                 </div>
 
                                 <div className="pb-2">
-                                    <strong>Payments Remaining: </strong> {subscription.paymentsRemaining}
+                                    <strong>Payments Remaining: </strong> {subscription?.paymentsRemaining ?? 0}
                                 </div>
-                            </p>
+                            </div>
                             <hr />
                             <div className="text-center">
                                 <button className="btn btn-danger w-50" onClick={() => handleCancel()}>Cancel</button>

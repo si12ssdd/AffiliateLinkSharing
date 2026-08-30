@@ -40,7 +40,7 @@ function PurchaseCredit() {
 
                         dispatch({
                             type: SET_USER,
-                            payload: data
+                            payload: data.user || data
                         });
                         setMessage(`${credits} credits added successfully!`);
                     } catch (error) {
@@ -79,7 +79,7 @@ function PurchaseCredit() {
 
                         dispatch({
                             type: SET_USER,
-                            payload: user.data
+                            payload: user.data.user || user.data
                         });
                         setMessage('Subscription activated successfully!');
                     } catch (error) {
@@ -105,7 +105,7 @@ function PurchaseCredit() {
                     <h1 className="display-4">Flexible Plans for Everyone</h1>
                     <p className="lead text-muted">Choose the perfect plan to supercharge your affiliate marketing.</p>
                     <div className="current-balance-container mt-4">
-                        Your Current Balance: <strong>{userDetails.credits} Credits</strong>
+                        Your Current Balance: <strong>{userDetails?.credits ?? 0} Credits</strong>
                     </div>
                 </div>
 
