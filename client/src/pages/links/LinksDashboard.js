@@ -256,7 +256,8 @@ function LinksDashboard() {
             sortable: false,
             flex: 1.5,
             renderCell: (params) => {
-                const shareURL = `${serverEndpoint}/links/r/${params.row._id}`;
+                const baseUrl = serverEndpoint || window.location.origin;
+                const shareURL = `${baseUrl}/links/r/${params.row._id}`;
                 return (
                     <button className='btn btn-outline-primary btn-sm'
                         onClick={() => navigator.clipboard.writeText(shareURL)}

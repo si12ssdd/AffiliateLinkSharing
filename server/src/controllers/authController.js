@@ -6,9 +6,22 @@ const { validationResult } = require('express-validator');
 const send = require('../services/emailService');
 const { attemptToRefreshToken } = require('../utils/authUtil');
 
-// https://www.uuidgenerator.net/
-const secret = process.env.JWT_SECRET;
-const refreshSecret = process.env.JWT_REFRESH_TOKEN_SECRET;
+const getJwtSecret = () => {
+    const s = process.env.JWT_SECRET;
+    if (!s) {
+        throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    return s;
+};
+
+const getRefreshSecret = () => {
+    const s = process.env.JWT_REFRESH_TOKEN_SECRET;
+    if (!s) {
+        throw new Error('JWT_REFRESH_TOKEN_SECRET is not defined in environment variables');
+    }
+    return s;
+};
+
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 
 const getCookieOptions = () => ({
@@ -26,12 +39,10 @@ const authController = {
                 return response.status(401).json({ errors: errors.array() });
             }
 
-            // The body contains username and password because of the express.json()
-            // middleware configured in the server.js
-            const { username, password } = request.body;
+            const { username, password } = request.body || {};
 
-            // Call Database to fetch user by the email
-            const data = await Users.findOne({ email: username });
+            const cleanEmail = (username || '').trim().toLowerCase();
+            const data = await Users.findOne({ email: cleanEmail });
             if (!data) {
                 return response.status(401).json({ message: 'Invalid credentials' });
             }
@@ -51,15 +62,15 @@ const authController = {
                 subscription: data.subscription
             };
 
-            const token = jwt.sign(user, secret, { expiresIn: '1h' });
+            const token = jwt.sign(user, getJwtSecret(), { expiresIn: '1h' });
             response.cookie('jwtToken', token, getCookieOptions());
 
-            const refreshToken = jwt.sign(user, refreshSecret, { expiresIn: '7d' });
+            const refreshToken = jwt.sign(user, getRefreshSecret(), { expiresIn: '7d' });
             response.cookie('refreshToken', refreshToken, getCookieOptions());
             response.json({ user: user, message: 'User authenticated' });
         } catch (error) {
-            console.log(error);
-            response.status(500).json({ error: 'Internal server error' });
+            console.error('Login error:', error.message || error);
+            response.status(500).json({ error: error.message || 'Internal server error' });
         }
     },
 
@@ -76,56 +87,68 @@ const authController = {
             return response.status(401).json({ message: 'Unauthorized access' });
         }
 
-        jwt.verify(token, secret, async (error, user) => {
-            if (error) {
-                const refreshToken = request.cookies?.refreshToken;
-                if (refreshToken) {
-                    try {
-                        const { newAccessToken, user: refreshedUser } =
-                            await attemptToRefreshToken(refreshToken);
-                        response.cookie('jwtToken', newAccessToken, getCookieOptions());
-                        console.log('Refresh token renewed the access token');
-                        return response.json({ message: 'User is logged in', user: refreshedUser });
-                    } catch (refreshErr) {
-                        return response.status(401).json({ message: 'Unauthorized access' });
+        try {
+            const secret = getJwtSecret();
+            jwt.verify(token, secret, async (error, user) => {
+                if (error) {
+                    const refreshToken = request.cookies?.refreshToken;
+                    if (refreshToken) {
+                        try {
+                            const { newAccessToken, user: refreshedUser } =
+                                await attemptToRefreshToken(refreshToken);
+                            response.cookie('jwtToken', newAccessToken, getCookieOptions());
+                            console.log('Refresh token renewed the access token');
+                            return response.json({ message: 'User is logged in', user: refreshedUser });
+                        } catch (refreshErr) {
+                            return response.status(401).json({ message: 'Unauthorized access' });
+                        }
                     }
-                }
 
-                return response.status(401).json({ message: 'Unauthorized access' });
-            } else {
-                try {
-                    const latestUserDetails = await Users.findById(user.id);
-                    if (!latestUserDetails) {
-                        return response.status(401).json({ message: 'Unauthorized access' });
+                    return response.status(401).json({ message: 'Unauthorized access' });
+                } else {
+                    try {
+                        const latestUserDetails = await Users.findById(user.id);
+                        if (!latestUserDetails) {
+                            return response.status(401).json({ message: 'Unauthorized access' });
+                        }
+                        response.json({ message: 'User is logged in', user: latestUserDetails });
+                    } catch (dbErr) {
+                        response.status(500).json({ message: 'Internal server error' });
                     }
-                    response.json({ message: 'User is logged in', user: latestUserDetails });
-                } catch (dbErr) {
-                    response.status(500).json({ message: 'Internal server error' });
                 }
-            }
-        });
+            });
+        } catch (jwtErr) {
+            console.error('isUserLoggedIn error:', jwtErr.message);
+            return response.status(500).json({ error: jwtErr.message || 'Internal server error' });
+        }
     },
 
     register: async (request, response) => {
         try {
-            // Extract attributes from the request body
-            const { username, password, name } = request.body;
+            const { username, password, name } = request.body || {};
 
-            // Firstly check if user already exist with the given email
-            const data = await Users.findOne({ email: username });
-            if (data) {
-                return response.status(401)
-                    .json({ message: 'Account already exist with given email' });
+            console.log(
+                `[Register Attempt] email: ${username ? username.trim().toLowerCase() : 'MISSING'} | hasName: ${Boolean(name)} | hasPassword: ${Boolean(password)}`
+            );
+
+            if (!username || !password || !name) {
+                return response.status(400).json({ message: 'Name, email, and password are required' });
             }
 
-            // Encrypt the password before saving the record to the database
+            const cleanEmail = username.trim().toLowerCase();
+
+            const data = await Users.findOne({ email: cleanEmail });
+            if (data) {
+                return response.status(401)
+                    .json({ message: 'Account already exists with given email' });
+            }
+
             const encryptedPassword = await bcrypt.hash(password, 10);
 
-            // Create mongoose model object and set the record values
             const user = new Users({
-                email: username,
+                email: cleanEmail,
                 password: encryptedPassword,
-                name: name,
+                name: name.trim(),
                 role: 'admin'
             });
             await user.save();
@@ -136,13 +159,19 @@ const authController = {
                 role: user.role,
                 credits: user.credits
             };
-            const token = jwt.sign(userDetails, secret, { expiresIn: '1h' });
+            const token = jwt.sign(userDetails, getJwtSecret(), { expiresIn: '1h' });
 
             response.cookie('jwtToken', token, getCookieOptions());
             response.json({ message: 'User registered', user: userDetails });
         } catch (error) {
-            console.log(error);
-            return response.status(500).json({ error: 'Internal Server Error' });
+            console.error('Registration error:', error.message || error);
+            if (error.code === 11000) {
+                return response.status(400).json({ message: 'Account already exists with given email' });
+            }
+            if (error.name === 'ValidationError') {
+                return response.status(400).json({ message: error.message });
+            }
+            return response.status(500).json({ error: error.message || 'Internal Server Error' });
         }
     },
 
@@ -183,12 +212,10 @@ const authController = {
             };
 
             // making 1 minute only for testing, revert it back to 1h
-            const token = jwt.sign(user, secret, { expiresIn: '1h' });
+            const token = jwt.sign(user, getJwtSecret(), { expiresIn: '1h' });
             response.cookie('jwtToken', token, getCookieOptions());
 
-            const refreshToken = jwt.sign(user, refreshSecret, { expiresIn: '7d' });
-            // store it in the detabase if you want! stroing in DB will
-            // make refresh tokens more secure
+            const refreshToken = jwt.sign(user, getRefreshSecret(), { expiresIn: '7d' });
             response.cookie('refreshToken', refreshToken, getCookieOptions());
             response.json({ user: user, message: 'User authenticated' });
         } catch (error) {

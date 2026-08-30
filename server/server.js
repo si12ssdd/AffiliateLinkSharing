@@ -64,9 +64,20 @@ const defaultAllowedOrigins = [
   'http://127.0.0.1:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://affiliate-link-sharing.vercel.app',
   'https://magical-mousse-326f31.netlify.app',
   ...clientUrls
 ].map(url => url.replace(/\/+$/, ''));
+
+// Safe request logging (no sensitive data logged)
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/auth')) {
+    console.log(
+      `[Auth API] ${req.method} ${req.originalUrl} | Origin: ${req.headers.origin || 'same-origin'} | DB ReadyState: ${mongoose.connection.readyState} | Has MONGO_URI: ${Boolean(process.env.MONGO_URI)} | Has JWT_SECRET: ${Boolean(process.env.JWT_SECRET)}`
+    );
+  }
+  next();
+});
 
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
@@ -101,6 +112,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Affiliate Link Sharing API is running' });
+});
 app.use('/auth', authRoutes);
 app.use('/links', linksRoutes);
 app.use('/users', userRoutes);

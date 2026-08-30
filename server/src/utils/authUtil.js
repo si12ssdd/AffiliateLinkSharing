@@ -1,15 +1,19 @@
 const jwt = require('jsonwebtoken');
 const Users = require('../models/User');
-const refreshSecret = process.env.JWT_REFRESH_TOKEN_SECRET;
-const secret = process.env.JWT_SECRET;
-
 const attemptToRefreshToken = async (refreshToken) =>{
     try{
+        const refreshSecret = process.env.JWT_REFRESH_TOKEN_SECRET;
+        const secret = process.env.JWT_SECRET;
+
+        if (!refreshSecret || !secret) {
+            throw new Error('JWT secrets are not configured in environment variables');
+        }
+
         const decoded = jwt.verify(refreshToken, refreshSecret);
-        //fetch the latest user data from Db across 7 days of
-        // refreshtoken lifecycle, user details like credits, subscriptions
-        // can change
         const data = await Users.findById(decoded.id);
+        if (!data) {
+            throw new Error('User not found');
+        }
 
         const user = {
             id: data._id,
@@ -20,12 +24,11 @@ const attemptToRefreshToken = async (refreshToken) =>{
             subscription: data.subscription
         };
 
-        // change expiry to 1 hour after testing.
         const newAccessToken = jwt.sign(user, secret, { expiresIn: '1h'});
 
         return {newAccessToken, user};
     }catch(error){
-        console.log(error);
+        console.error('Refresh token error:', error.message || error);
         throw error;
     }
 }

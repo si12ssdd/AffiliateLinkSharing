@@ -15,6 +15,10 @@
     ],
     "routes": [
         {
+            "src": "/health(.*)",
+            "dest": "/server/server.js"
+        },
+        {
             "src": "/auth(.*)",
             "dest": "/server/server.js"
         },
