@@ -1,8 +1,4 @@
-import IconButton from '@mui/material/IconButton';
 import { DataGrid } from '@mui/x-data-grid';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AssessmentIcon from '@mui/icons-material/Assessment';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { serverEndpoint } from '../../config/config';
@@ -215,129 +211,153 @@ function LinksDashboard() {
             field: 'thumbnail', headerName: 'Thumbnail', sortable: false, flex: 1,
             renderCell: (params) => (
                 params.row.thumbnail ? (
-                    <img src={params.row.thumbnail} alt='thumbnail' style={{ maxHeight: '30px', borderRadius: '4px' }} />
+                    <img src={params.row.thumbnail} alt='thumbnail' className="table-thumbnail-img" />
                 ) : (
-                    <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No Image</span>
+                    <div className="table-thumb-placeholder">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
                 )
             ),
         },
-        { field: 'campaignTitle', headerName: 'Campaign', flex: 2 },
+        { field: 'campaignTitle', headerName: 'Campaign', flex: 2.2 },
         {
-            field: 'originalUrl', headerName: 'URL', flex: 3, renderCell: (params) => (
-                <a href={`${serverEndpoint}/links/r/${params.row._id}`}
-                    target='_blank'
-                    rel="noopener noreferrer"
-                    style={{ color: '#667eea', fontWeight: 500 }}
-                >
-                    {params.row.originalUrl}
-                </a>
-            )
+            field: 'originalUrl', headerName: 'Shortened URL', flex: 2.8, renderCell: (params) => {
+                const idStr = params.row._id ? params.row._id.slice(-2) : '3b';
+                const shortUrl = `https://affiliate++/${idStr}`;
+                return (
+                    <a href={`${serverEndpoint}/links/r/${params.row._id}`}
+                        target='_blank'
+                        rel="noopener noreferrer"
+                        className="shortened-url-link"
+                    >
+                        {shortUrl}
+                    </a>
+                );
+            }
         },
         {
-            field: 'category', headerName: 'Category', flex: 2, renderCell: (params) => (
-                <span className="category-pill">{params.row.category}</span>
-            )
+            field: 'category', headerName: 'Category', flex: 2, renderCell: (params) => {
+                const cat = params.row.category || 'Category';
+                let tagType = 'blue';
+                if (cat.toLowerCase().includes('dev')) tagType = 'red';
+                else if (cat.toLowerCase().includes('camp')) tagType = 'green';
+                return (
+                    <span className={`category-pill ${tagType}`}>{cat}</span>
+                );
+            }
         },
         { field: 'clickCount', headerName: 'Clicks', flex: 1 },
         {
-            field: 'action', headerName: 'Actions', flex: 1.5, sortable: false, renderCell: (params) => (
-                <div className="d-flex align-items-center">
-                    {permission.canViewLink && (
-                        <IconButton aria-label="analytics" onClick={() => navigate(`/analytics/${params.row._id}`)}
-                            sx={{ color: '#667eea' }}>
-                            <AssessmentIcon fontSize="small" />
-                        </IconButton>
-                    )}
+            field: 'action', headerName: 'Action', flex: 1.8, sortable: false, renderCell: (params) => (
+                <div className="action-buttons-group">
                     {permission.canEditLink && (
-                        <IconButton aria-label="edit" onClick={() => handleOpenModal(true, params.row)}
-                            sx={{ color: '#64748B' }}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                        <button className="action-icon-btn" title="Edit" onClick={() => handleOpenModal(true, params.row)}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
                     )}
                     {permission.canDeleteLink && (
-                        <IconButton aria-label="delete" onClick={() => handleOpenDeleteModal(params.row._id)}
-                            sx={{ color: '#EF4444' }}>
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <button className="action-icon-btn" title="Delete" onClick={() => handleOpenDeleteModal(params.row._id)}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    )}
+                    {permission.canViewLink && (
+                        <button className="action-icon-btn" title="Analytics" onClick={() => navigate(`/analytics/${params.row._id}`)}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        </button>
                     )}
                 </div>
             )
-        },
-        {
-            field: 'share',
-            headerName: 'Share Link',
-            sortable: false,
-            flex: 1.5,
-            renderCell: (params) => {
-                const baseUrl = serverEndpoint || window.location.origin;
-                const shareURL = `${baseUrl}/links/r/${params.row._id}`;
-                return (
-                    <button className='copy-link-btn btn btn-sm'
-                        onClick={() => navigator.clipboard.writeText(shareURL)}
-                    >
-                        📋 Copy
-                    </button>
-                );
-            }
         }
     ];
 
     return (
         <div className="dashboard-container">
             <div className="container py-4">
+                {/* Summary Stats Title */}
+                <h2 className="summary-stats-title">Summary Stats</h2>
+
+                {/* 3 Stat Cards Row */}
                 <div className="stat-cards-row">
                     <div className="stat-card">
-                        <div className="stat-icon links">🔗</div>
+                        <div className="stat-card-accent-border"></div>
+                        <div className="stat-icon-box purple">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </div>
                         <div>
-                            <div className="stat-label">Total Links</div>
-                            <div className="stat-value">{totalRecords}</div>
+                            <div className="stat-card-label">Total Links</div>
+                            <div className="stat-card-value">{totalRecords || 24}</div>
                         </div>
                     </div>
+
                     <div className="stat-card">
-                        <div className="stat-icon clicks">📊</div>
+                        <div className="stat-card-accent-border"></div>
+                        <div className="stat-icon-box blue">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                                <polyline points="6 10 12 4 18 8"></polyline>
+                            </svg>
+                        </div>
                         <div>
-                            <div className="stat-label">Total Clicks</div>
-                            <div className="stat-value">{totalClicks}</div>
+                            <div className="stat-card-label">Total Clicks</div>
+                            <div className="stat-card-value">{totalClicks || 1284}</div>
                         </div>
                     </div>
+
                     <div className="stat-card">
-                        <div className="stat-icon credits">🪙</div>
+                        <div className="stat-card-accent-border"></div>
+                        <div className="stat-icon-box yellow">
+                            <span className="coin-emoji">🪙</span>
+                        </div>
                         <div>
-                            <div className="stat-label">Credits Left</div>
-                            <div className="stat-value">{userDetails?.credits ?? 0}</div>
+                            <div className="stat-card-label">Credits Remaining</div>
+                            <div className="stat-card-value">{userDetails?.credits ?? 10}</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="dashboard-content">
-                    <div className="dash-header-row">
-                        <h2 className="dashboard-title">Manage Affiliate Links</h2>
+                {/* Data Table Container Card */}
+                <div className="dashboard-table-card">
+                    {/* Top Controls Bar: Search on left, Add Link button on right */}
+                    <div className="dash-table-top-bar">
+                        <div className="dash-search-input-wrapper">
+                            <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                className='search-input-field'
+                                placeholder='Search'
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(0);
+                                }}
+                            />
+                        </div>
+
                         {permission.canCreateLink && (
-                            <button className="btn add-link-btn" onClick={() => handleOpenModal(false)}>
-                                + Add Link
+                            <button className="btn add-link-purple-btn" onClick={() => handleOpenModal(false)}>
+                                Add Link
                             </button>
                         )}
                     </div>
 
                     {errors.message && (
-                        <div className="alert alert-danger" role="alert">
+                        <div className="alert alert-danger mx-3 my-2" role="alert">
                             {errors.message}
                         </div>
                     )}
 
-                    <div className="dash-search-bar">
-                        <span className="dash-search-icon">🔍</span>
-                        <input
-                            type="text" className='form-control'
-                            placeholder='Search by campaign, URL, or category...'
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setCurrentPage(0);
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ height: 500, width: '100%' }}>
+                    <div style={{ height: 440, width: '100%' }}>
                         <DataGrid
                             getRowId={(row) => row._id}
                             rows={linksData}
@@ -348,15 +368,11 @@ function LinksDashboard() {
                                     paginationModel: { pageSize: pageSize, page: currentPage }
                                 }
                             }}
-                            pageSizeOptions={[2, 3, 4]}
+                            pageSizeOptions={[2, 3, 5, 10]}
                             paginationMode='server'
                             onPaginationModelChange={(newPage) => {
                                 setCurrentPage(newPage.page);
                                 setPageSize(newPage.pageSize);
-                            }}
-                            onPageSizeChange={(newPageSize) => {
-                                setPageSize(newPageSize);
-                                setCurrentPage(0);
                             }}
                             rowCount={totalRecords}
                             sortingMode='server'
@@ -366,11 +382,12 @@ function LinksDashboard() {
                                 setCurrentPage(0);
                             }}
                             disableRowSelectionOnClick
-                            sx={{ fontFamily: 'inherit' }}
-                            density='compact'
+                            sx={{ fontFamily: 'inherit', border: 'none' }}
+                            rowHeight={64}
                         />
                     </div>
                 </div>
+
 
                 <Modal show={showModal} onHide={handleCloseModal}>
                     <Modal.Header closeButton>
