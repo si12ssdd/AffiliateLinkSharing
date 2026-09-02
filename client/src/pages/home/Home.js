@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 function Home() {
+  const [activeFaq, setActiveFaq] = useState(null);
+
+  const toggleFaq = (index) => {
+    setActiveFaq(activeFaq === index ? null : index);
+  };
+
+  const faqs = [
+    {
+      q: "How does Affiliate++ track clicks and conversions in real-time?",
+      a: "Affiliate++ uses high-performance redirect edge routers that log every incoming request instantly before redirecting the user to your destination URL, giving you live analytics."
+    },
+    {
+      q: "Can I use custom branded domains and slugs for my short links?",
+      a: "Yes! Pro and Enterprise accounts allow you to connect custom domain names and customize link slugs to boost CTR and trust."
+    },
+    {
+      q: "How do credits work for link generation and management?",
+      a: "Credits are used when generating new shortened affiliate links or running deep export reports. New accounts start with free credits and can top up anytime."
+    },
+    {
+      q: "Is team collaboration supported with permission roles?",
+      a: "Absolutely. Our platform supports role-based access control (RBAC), allowing admin, editor, and viewer roles across your team."
+    }
+  ];
+
   return (
     <div className="landing-page">
 
@@ -59,32 +84,28 @@ function Home() {
                     {/* SVG Graphic Bar Chart */}
                     <div className="mockup-chart-container">
                       <svg width="100%" height="150" viewBox="0 0 320 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        {/* Grid lines */}
                         <line x1="0" y1="30" x2="320" y2="30" stroke="#F1F5F9" strokeWidth="1"/>
                         <line x1="0" y1="70" x2="320" y2="70" stroke="#F1F5F9" strokeWidth="1"/>
                         <line x1="0" y1="110" x2="320" y2="110" stroke="#F1F5F9" strokeWidth="1"/>
                         
-                        {/* Bar Groups: Mon, Tue, Wed, Thu, Fri, Sat */}
-                        {/* Mon */}
                         <rect x="25" y="80" width="8" height="45" rx="3" fill="#60A5FA"/>
                         <rect x="37" y="60" width="8" height="65" rx="3" fill="#2DD4BF"/>
-                        {/* Tue */}
+                        
                         <rect x="70" y="45" width="8" height="80" rx="3" fill="#60A5FA"/>
                         <rect x="82" y="75" width="8" height="50" rx="3" fill="#F43F5E"/>
-                        {/* Wed */}
+                        
                         <rect x="115" y="65" width="8" height="60" rx="3" fill="#38BDF8"/>
                         <rect x="127" y="40" width="8" height="85" rx="3" fill="#A855F7"/>
-                        {/* Thu */}
+                        
                         <rect x="160" y="70" width="8" height="55" rx="3" fill="#34D399"/>
                         <rect x="172" y="50" width="8" height="75" rx="3" fill="#F59E0B"/>
-                        {/* Fri */}
+                        
                         <rect x="205" y="35" width="8" height="90" rx="3" fill="#60A5FA"/>
                         <rect x="217" y="55" width="8" height="70" rx="3" fill="#EC4899"/>
-                        {/* Sat */}
+                        
                         <rect x="250" y="40" width="8" height="85" rx="3" fill="#38BDF8"/>
                         <rect x="262" y="60" width="8" height="65" rx="3" fill="#A855F7"/>
 
-                        {/* X-axis labels */}
                         <text x="31" y="140" fill="#94A3B8" fontSize="9" textAnchor="middle">Mon</text>
                         <text x="76" y="140" fill="#94A3B8" fontSize="9" textAnchor="middle">Tue</text>
                         <text x="121" y="140" fill="#94A3B8" fontSize="9" textAnchor="middle">Wed</text>
@@ -103,7 +124,7 @@ function Home() {
             </div>
           </div>
 
-          {/* Feature Cards Grid (4 Cards at Bottom of Hero) */}
+          {/* Feature Cards Grid */}
           <div className="row g-4 mt-5 hero-feature-cards">
             <div className="col-md-6 col-lg-3">
               <div className="feature-card">
@@ -163,6 +184,158 @@ function Home() {
                 <p>Grant secure access to your team and manage user permissions easily.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* #features Deep Dive Section */}
+      <section id="features" className="section-padding">
+        <div className="container">
+          <div className="text-center mb-5">
+            <span className="section-badge">Platform Capabilities</span>
+            <h2 className="section-main-heading">Everything You Need to Scale</h2>
+            <p className="section-sub-text">Built from the ground up for performance, precision, and ease of use.</p>
+          </div>
+
+          <div className="row g-4">
+            <div className="col-md-4">
+              <div className="feature-detail-card">
+                <div className="detail-icon">⚡</div>
+                <h4>Instant Redirects</h4>
+                <p>Sub-10ms global edge redirects keep your visitors engaged and conversions high.</p>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="feature-detail-card">
+                <div className="detail-icon">🔒</div>
+                <h4>Fraud Detection</h4>
+                <p>Automatically filter out bot traffic and fraudulent clicks to protect your conversion data.</p>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="feature-detail-card">
+                <div className="detail-icon">📈</div>
+                <h4>Granular Insights</h4>
+                <p>View detailed breakdowns by country, device, browser, referrer, and campaign tags.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* #pricing Section */}
+      <section id="pricing" className="section-padding dark-section-bg">
+        <div className="container">
+          <div className="text-center mb-5">
+            <span className="section-badge">Pricing Plans</span>
+            <h2 className="section-main-heading">Simple, Transparent Pricing</h2>
+            <p className="section-sub-text">Choose the plan that fits your growth. Upgrade or downgrade anytime.</p>
+          </div>
+
+          <div className="row g-4 align-items-center justify-content-center">
+            {/* Starter Plan */}
+            <div className="col-lg-4 col-md-6">
+              <div className="pricing-card">
+                <div className="pricing-header">
+                  <h3 className="plan-title">Starter</h3>
+                  <p className="plan-desc">For creators & individual affiliate marketers.</p>
+                  <div className="plan-price">$0 <span className="period">/ month</span></div>
+                </div>
+                <ul className="plan-features">
+                  <li>✔ Up to 100 Short Links</li>
+                  <li>✔ 10 Monthly Credits</li>
+                  <li>✔ Basic Click Tracking</li>
+                  <li>✔ Standard Support</li>
+                </ul>
+                <Link to="/register" className="btn pricing-btn outline">Get Started Free</Link>
+              </div>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="col-lg-4 col-md-6">
+              <div className="pricing-card featured">
+                <div className="popular-tag">Most Popular</div>
+                <div className="pricing-header">
+                  <h3 className="plan-title">Pro Marketer</h3>
+                  <p className="plan-desc">For serious marketers looking to scale revenue.</p>
+                  <div className="plan-price">$19 <span className="period">/ month</span></div>
+                </div>
+                <ul className="plan-features">
+                  <li>✔ Unlimited Short Links</li>
+                  <li>✔ 1,000 Monthly Credits</li>
+                  <li>✔ Real-Time Analytics & Geo Data</li>
+                  <li>✔ Custom Slugs & Branding</li>
+                  <li>✔ Priority Email Support</li>
+                </ul>
+                <Link to="/register" className="btn pricing-btn gradient">Start Free Trial</Link>
+              </div>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="col-lg-4 col-md-6">
+              <div className="pricing-card">
+                <div className="pricing-header">
+                  <h3 className="plan-title">Enterprise</h3>
+                  <p className="plan-desc">For agencies, networks, and large teams.</p>
+                  <div className="plan-price">$49 <span className="period">/ month</span></div>
+                </div>
+                <ul className="plan-features">
+                  <li>✔ Unlimited Links & Clicks</li>
+                  <li>✔ Dedicated Account Manager</li>
+                  <li>✔ Custom Domain Integration</li>
+                  <li>✔ Role-Based Team Permissions</li>
+                  <li>✔ 99.9% Uptime SLA Guarantee</li>
+                </ul>
+                <a href="#enterprise" className="btn pricing-btn outline">Explore Enterprise</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* #resources FAQ Section */}
+      <section id="resources" className="section-padding">
+        <div className="container">
+          <div className="text-center mb-5">
+            <span className="section-badge">Help & FAQ</span>
+            <h2 className="section-main-heading">Resources & FAQ</h2>
+            <p className="section-sub-text">Everything you need to know about getting started with Affiliate++.</p>
+          </div>
+
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="faq-accordion">
+                {faqs.map((faq, index) => (
+                  <div key={index} className={`faq-item ${activeFaq === index ? 'active' : ''}`} onClick={() => toggleFaq(index)}>
+                    <div className="faq-question">
+                      <h5>{faq.q}</h5>
+                      <span className="faq-toggle-icon">{activeFaq === index ? '−' : '+'}</span>
+                    </div>
+                    {activeFaq === index && (
+                      <div className="faq-answer">
+                        <p>{faq.a}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* #enterprise Section */}
+      <section id="enterprise" className="section-padding dark-section-bg border-top-glass">
+        <div className="container text-center">
+          <div className="enterprise-banner">
+            <span className="section-badge">Enterprise Ready</span>
+            <h2 className="enterprise-title">Scalable Infrastructure for Large Affiliate Networks</h2>
+            <p className="enterprise-text">
+              Handling millions of link clicks per day? Our enterprise infrastructure provides dedicated server capacity, custom domain routing, and SOC-2 compliance.
+            </p>
+            <Link to="/register" className="hero-cta-btn mt-3">
+              Request Enterprise Demo
+            </Link>
           </div>
         </div>
       </section>
