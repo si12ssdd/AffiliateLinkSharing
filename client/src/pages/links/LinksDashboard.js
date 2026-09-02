@@ -9,11 +9,14 @@ import { serverEndpoint } from '../../config/config';
 import { Modal } from 'react-bootstrap';
 import { usePermission } from '../../rbac/userPermissions';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import './LinksDashboard.css';
 
 function LinksDashboard() {
     const [errors, setErrors] = useState({});
     const [linksData, setLinksData] = useState([]);
     const navigate = useNavigate();
+    const userDetails = useSelector((state) => state.userDetails);
 
     const [showModal, setShowModal] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
@@ -205,14 +208,16 @@ function LinksDashboard() {
         fetchLinks();
     }, [fetchLinks]);
 
+    const totalClicks = linksData.reduce((sum, link) => sum + (link.clickCount || 0), 0);
+
     const columns = [
         {
             field: 'thumbnail', headerName: 'Thumbnail', sortable: false, flex: 1,
             renderCell: (params) => (
                 params.row.thumbnail ? (
-                    <img src={params.row.thumbnail} alt='thumbnail' style={{ maxHeight: '30px' }} />
+                    <img src={params.row.thumbnail} alt='thumbnail' style={{ maxHeight: '30px', borderRadius: '4px' }} />
                 ) : (
-                    <span style={{ color: '#888' }}>No Image</span>
+                    <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>No Image</span>
                 )
             ),
         },
@@ -222,29 +227,37 @@ function LinksDashboard() {
                 <a href={`${serverEndpoint}/links/r/${params.row._id}`}
                     target='_blank'
                     rel="noopener noreferrer"
+                    style={{ color: '#667eea', fontWeight: 500 }}
                 >
                     {params.row.originalUrl}
                 </a>
             )
         },
-        { field: 'category', headerName: 'Category', flex: 2 },
+        {
+            field: 'category', headerName: 'Category', flex: 2, renderCell: (params) => (
+                <span className="category-pill">{params.row.category}</span>
+            )
+        },
         { field: 'clickCount', headerName: 'Clicks', flex: 1 },
         {
             field: 'action', headerName: 'Actions', flex: 1.5, sortable: false, renderCell: (params) => (
                 <div className="d-flex align-items-center">
                     {permission.canViewLink && (
-                        <IconButton aria-label="analytics" onClick={() => navigate(`/analytics/${params.row._id}`)}>
-                            <AssessmentIcon />
+                        <IconButton aria-label="analytics" onClick={() => navigate(`/analytics/${params.row._id}`)}
+                            sx={{ color: '#667eea' }}>
+                            <AssessmentIcon fontSize="small" />
                         </IconButton>
                     )}
                     {permission.canEditLink && (
-                        <IconButton aria-label="edit" onClick={() => handleOpenModal(true, params.row)}>
-                            <EditIcon />
+                        <IconButton aria-label="edit" onClick={() => handleOpenModal(true, params.row)}
+                            sx={{ color: '#64748B' }}>
+                            <EditIcon fontSize="small" />
                         </IconButton>
                     )}
                     {permission.canDeleteLink && (
-                        <IconButton aria-label="delete" onClick={() => handleOpenDeleteModal(params.row._id)}>
-                            <DeleteIcon />
+                        <IconButton aria-label="delete" onClick={() => handleOpenDeleteModal(params.row._id)}
+                            sx={{ color: '#EF4444' }}>
+                            <DeleteIcon fontSize="small" />
                         </IconButton>
                     )}
                 </div>
@@ -252,17 +265,17 @@ function LinksDashboard() {
         },
         {
             field: 'share',
-            headerName: 'Share Affiliate Link',
+            headerName: 'Share Link',
             sortable: false,
             flex: 1.5,
             renderCell: (params) => {
                 const baseUrl = serverEndpoint || window.location.origin;
                 const shareURL = `${baseUrl}/links/r/${params.row._id}`;
                 return (
-                    <button className='btn btn-outline-primary btn-sm'
+                    <button className='copy-link-btn btn btn-sm'
                         onClick={() => navigator.clipboard.writeText(shareURL)}
                     >
-                        Copy
+                        📋 Copy
                     </button>
                 );
             }
@@ -270,169 +283,198 @@ function LinksDashboard() {
     ];
 
     return (
-        <div className="container py-4">
-            <div className="d-flex justify-content-between mb-3">
-                <h2>Manage Affiliate Links</h2>
-                {permission.canCreateLink && (
-                    <button className="btn btn-primary btn-sm" onClick={() => handleOpenModal(false)}>
-                        Add
-                    </button>
-                )}
-            </div>
-
-            {errors.message && (
-                <div className="alert alert-danger" role="alert">
-                    {errors.message}
+        <div className="dashboard-container">
+            <div className="container py-4">
+                <div className="stat-cards-row">
+                    <div className="stat-card">
+                        <div className="stat-icon links">🔗</div>
+                        <div>
+                            <div className="stat-label">Total Links</div>
+                            <div className="stat-value">{totalRecords}</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon clicks">📊</div>
+                        <div>
+                            <div className="stat-label">Total Clicks</div>
+                            <div className="stat-value">{totalClicks}</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon credits">🪙</div>
+                        <div>
+                            <div className="stat-label">Credits Left</div>
+                            <div className="stat-value">{userDetails?.credits ?? 0}</div>
+                        </div>
+                    </div>
                 </div>
-            )}
 
-            <div className="mb-2">
-                <input
-                    type="text" className='form-control'
-                    placeholder='Enter Campaign title, Original URL, or Category to search'
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(0);
-                    }}
-                />
-            </div>
+                <div className="dashboard-content">
+                    <div className="dash-header-row">
+                        <h2 className="dashboard-title">Manage Affiliate Links</h2>
+                        {permission.canCreateLink && (
+                            <button className="btn add-link-btn" onClick={() => handleOpenModal(false)}>
+                                + Add Link
+                            </button>
+                        )}
+                    </div>
 
-            <div style={{ height: 500, width: '100%' }}>
-                <DataGrid
-                    getRowId={(row) => row._id}
-                    rows={linksData}
-                    columns={columns}
-                    loading={loading}
-                    initialState={{
-                        pagination: {
-                            paginationModel: { pageSize: pageSize, page: currentPage }
-                        }
-                    }}
-                    pageSizeOptions={[2, 3, 4]}
-                    paginationMode='server'
-                    onPaginationModelChange={(newPage) => {
-                        setCurrentPage(newPage.page);
-                        setPageSize(newPage.pageSize);
-                    }}
-                    onPageSizeChange={(newPageSize) => {
-                        setPageSize(newPageSize);
-                        setCurrentPage(0);
-                    }}
-                    rowCount={totalRecords}
-                    sortingMode='server'
-                    sortModel={sortModel}
-                    onSortModelChange={(newModel) => {
-                        setSortModel(newModel);
-                        setCurrentPage(0);
-                    }}
-                    disableRowSelectionOnClick
-                    sx={{ fontFamily: 'inherit' }}
-                    density='compact'
-                />
-            </div>
-
-            <Modal show={showModal} onHide={handleCloseModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>{isEdit ? 'Update Link' : 'Add Link'}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label htmlFor="campaignTitle" className="form-label">Campaign Title</label>
-                            <input
-                                type="text"
-                                className={`form-control ${errors.campaignTitle ? 'is-invalid' : ''}`}
-                                id="campaignTitle"
-                                name="campaignTitle"
-                                value={formData.campaignTitle}
-                                onChange={handleChange}
-                            />
-                            {errors.campaignTitle && (
-                                <div className="invalid-feedback">
-                                    {errors.campaignTitle}
-                                </div>
-                            )}
+                    {errors.message && (
+                        <div className="alert alert-danger" role="alert">
+                            {errors.message}
                         </div>
+                    )}
 
-                        <div className="mb-3">
-                            <label htmlFor="originalUrl" className="form-label">URL</label>
-                            <input
-                                type="text"
-                                className={`form-control ${errors.originalUrl ? 'is-invalid' : ''}`}
-                                id="originalUrl"
-                                name="originalUrl"
-                                value={formData.originalUrl}
-                                onChange={handleChange}
-                            />
-                            {errors.originalUrl && (
-                                <div className="invalid-feedback">
-                                    {errors.originalUrl}
-                                </div>
-                            )}
-                        </div>
+                    <div className="dash-search-bar">
+                        <span className="dash-search-icon">🔍</span>
+                        <input
+                            type="text" className='form-control'
+                            placeholder='Search by campaign, URL, or category...'
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(0);
+                            }}
+                        />
+                    </div>
 
-                        <div className="mb-3">
-                            <label htmlFor="category" className="form-label">Category</label>
-                            <input
-                                type="text"
-                                className={`form-control ${errors.category ? 'is-invalid' : ''}`}
-                                id="category"
-                                name="category"
-                                value={formData.category}
-                                onChange={handleChange}
-                            />
-                            {errors.category && (
-                                <div className="invalid-feedback">
-                                    {errors.category}
-                                </div>
-                            )}
-                        </div>
+                    <div style={{ height: 500, width: '100%' }}>
+                        <DataGrid
+                            getRowId={(row) => row._id}
+                            rows={linksData}
+                            columns={columns}
+                            loading={loading}
+                            initialState={{
+                                pagination: {
+                                    paginationModel: { pageSize: pageSize, page: currentPage }
+                                }
+                            }}
+                            pageSizeOptions={[2, 3, 4]}
+                            paginationMode='server'
+                            onPaginationModelChange={(newPage) => {
+                                setCurrentPage(newPage.page);
+                                setPageSize(newPage.pageSize);
+                            }}
+                            onPageSizeChange={(newPageSize) => {
+                                setPageSize(newPageSize);
+                                setCurrentPage(0);
+                            }}
+                            rowCount={totalRecords}
+                            sortingMode='server'
+                            sortModel={sortModel}
+                            onSortModelChange={(newModel) => {
+                                setSortModel(newModel);
+                                setCurrentPage(0);
+                            }}
+                            disableRowSelectionOnClick
+                            sx={{ fontFamily: 'inherit' }}
+                            density='compact'
+                        />
+                    </div>
+                </div>
 
-                        <div className='mb-2'>
-                            <label htmlFor='thumbnail'>Thumbnail</label>
-                            <input
-                                type='file'
-                                accept='image/*'
-                                className='form-control'
-                                onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        setThumbnailFile(file);
-                                        setPreviewUrl(URL.createObjectURL(file));
-                                    }
-                                }}
-                            />
-                            {previewUrl && (
-                                <img src={previewUrl} alt='preview'
-                                    className='img-responsive border rounded-2 mt-2'
-                                    style={{ maxHeight: '100px' }}
+                <Modal show={showModal} onHide={handleCloseModal}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>{isEdit ? 'Update Link' : 'Add Link'}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-3">
+                                <label htmlFor="campaignTitle" className="form-label">Campaign Title</label>
+                                <input
+                                    type="text"
+                                    className={`form-control ${errors.campaignTitle ? 'is-invalid' : ''}`}
+                                    id="campaignTitle"
+                                    name="campaignTitle"
+                                    value={formData.campaignTitle}
+                                    onChange={handleChange}
                                 />
-                            )}
-                        </div>
+                                {errors.campaignTitle && (
+                                    <div className="invalid-feedback">
+                                        {errors.campaignTitle}
+                                    </div>
+                                )}
+                            </div>
 
-                        <div className="d-grid">
-                            <button type="submit" className="btn btn-primary">Submit</button>
-                        </div>
-                    </form>
-                </Modal.Body>
-            </Modal>
+                            <div className="mb-3">
+                                <label htmlFor="originalUrl" className="form-label">URL</label>
+                                <input
+                                    type="text"
+                                    className={`form-control ${errors.originalUrl ? 'is-invalid' : ''}`}
+                                    id="originalUrl"
+                                    name="originalUrl"
+                                    value={formData.originalUrl}
+                                    onChange={handleChange}
+                                />
+                                {errors.originalUrl && (
+                                    <div className="invalid-feedback">
+                                        {errors.originalUrl}
+                                    </div>
+                                )}
+                            </div>
 
-            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Confirm Delete</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>Are you sure you want to delete the link?</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <button className='btn btn-secondary' onClick={handleCloseDeleteModal}>
-                        Cancel
-                    </button>
-                    <button className='btn btn-danger' onClick={handleDelete}>
-                        Delete
-                    </button>
-                </Modal.Footer>
-            </Modal>
+                            <div className="mb-3">
+                                <label htmlFor="category" className="form-label">Category</label>
+                                <input
+                                    type="text"
+                                    className={`form-control ${errors.category ? 'is-invalid' : ''}`}
+                                    id="category"
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleChange}
+                                />
+                                {errors.category && (
+                                    <div className="invalid-feedback">
+                                        {errors.category}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className='mb-2'>
+                                <label htmlFor='thumbnail'>Thumbnail</label>
+                                <input
+                                    type='file'
+                                    accept='image/*'
+                                    className='form-control'
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            setThumbnailFile(file);
+                                            setPreviewUrl(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                />
+                                {previewUrl && (
+                                    <img src={previewUrl} alt='preview'
+                                        className='img-responsive border rounded-2 mt-2'
+                                        style={{ maxHeight: '100px' }}
+                                    />
+                                )}
+                            </div>
+
+                            <div className="d-grid">
+                                <button type="submit" className="btn btn-primary">Submit</button>
+                            </div>
+                        </form>
+                    </Modal.Body>
+                </Modal>
+
+                <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Confirm Delete</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>Are you sure you want to delete the link?</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <button className='btn btn-secondary' onClick={handleCloseDeleteModal}>
+                            Cancel
+                        </button>
+                        <button className='btn btn-danger' onClick={handleDelete}>
+                            Delete
+                        </button>
+                    </Modal.Footer>
+                </Modal>
+            </div>
         </div>
     );
 }

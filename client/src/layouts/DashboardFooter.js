@@ -1,7 +1,7 @@
 function DashboardFooter() {
     return (
-        <div className="container-fluid bg-light text-center py-3">
-            All rights reserved.
+        <div className="dash-footer">
+            &copy; {new Date().getFullYear()} Affiliate++. All rights reserved.
         </div>
     );
 }

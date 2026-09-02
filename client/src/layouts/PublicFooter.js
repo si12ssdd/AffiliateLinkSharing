@@ -1,8 +1,9 @@
 function PublicFooter() {
     return (
-        <footer className="text-center">
+        <footer className="public-footer text-center">
             <div className="container">
-                <p>&copy; 2025 Affiliate++. All Rights Reserved.</p>
+                <span className="footer-brand">Affiliate++</span>
+                <p>&copy; {new Date().getFullYear()} Affiliate++. All Rights Reserved.</p>
             </div>
         </footer>
     );
