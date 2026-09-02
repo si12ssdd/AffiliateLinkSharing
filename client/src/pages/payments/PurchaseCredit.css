@@ -35,7 +35,7 @@
     font-weight: 600;
 }
 
-.pricing-card {
+.pricing-container .pricing-card {
     background-color: #ffffff;
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -49,17 +49,17 @@
     border: 1.5px solid #E2E8F0;
 }
 
-.pricing-card:hover {
+.pricing-container .pricing-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
 }
 
-.pricing-card.popular {
+.pricing-container .pricing-card.popular {
     border: 2px solid #667eea;
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
 }
 
-.pricing-card.popular:hover {
+.pricing-container .pricing-card.popular:hover {
     box-shadow: 0 16px 48px rgba(102, 126, 234, 0.25);
 }
 
